@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhisheng.ssmtest.dao.TeacherDao">
+    <resultMap id="TeacherMap" type="com.zhisheng.ssmtest.bean.Teacher">
+        <id property="id" column="id"/>
+        <result property="address" column="address"/>
+        <result property="birth" column="birth_date"/>
+        <result property="Course" column="course_name"/>
+        <result property="name" column="teacherName"/>
+    </resultMap>
+    
+    <select id="getTeacherById" resultMap="TeacherMap">
+        select * from teacher where id=#{id}
+    </select>
+</mapper>

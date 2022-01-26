@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/aop
+                           http://www.springframework.org/schema/aop/spring-aop.xsd
+                           http://www.springframework.org/schema/tx
+                           http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+       <!-- spring除了控制器不要，剩下的业务逻辑组件都要，包括dao和service -->
+       <!--<context:component-scan base-package="com.zhisheng.ssmtest">
+           <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+       </context:component-scan>-->
+
+       <!-- 导入外部 property -->
+       <context:property-placeholder location="classpath:db.properties"/>
+
+       <!-- 1.配数据源 -->
+       <bean id="ds" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+           <property name="user" value="${jdbc.username}"></property>
+           <property name="password" value="${jdbc.password}"></property>
+           <property name="driverClass" value="${jdbc.driver}"></property>
+           <property name="jdbcUrl" value="${jdbc.url}"></property>
+           <property name="maxPoolSize" value="${jdbc.maxPoolSize}"></property>
+           <property name="minPoolSize" value="${jdbc.minPoolSize}"></property>
+       </bean>
+
+       <!-- 2.配置mybatis操作数据库 -->
+       <bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+           <property name="configLocation" value="classpath:mybatis/mybatis-config.xml"></property>
+           <property name="dataSource" value="ds"></property>
+           <property name="mapperLocations" value="classpath:mybatis/mapper/*.xml"></property>
+       </bean>
+           <!-- 把每一个dao接口的实现加入到ioc容器中 -->
+       <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+           <!-- 指定dao接口所在的包 -->
+           <property name="basePackage" value="com.zhisheng.ssmtest.dao"></property>
+       </bean>
+
+       <!-- 3.配置事务控制(配置事务管理器，使其控制数据源里连接的关闭和提交) -->
+       <bean id="tm" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+           <property name="dataSource" ref="ds"></property>
+       </bean>
+
+       <!-- 4.配置事务（哪些方法切入事务，需要写切入点表达式）-->
+
+    <aop:config>
+        <aop:pointcut expression="execution(* com.zhisheng.ssmtest.service.*.*(..))" id="txpoint"/>
+        <aop:advisor advice-ref="txadvice" pointcut-ref="txpoint"></aop:advisor>
+    </aop:config>
+    <tx:advice id="txadvice" transaction-manager="tm">
+        <!-- 配置事务属性 -->
+        <tx:attributes>
+            <tx:method name="*" rollback-for="java.lang.Exception"/>
+            <tx:method name="get*" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+
+
+
+</beans>
